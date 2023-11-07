@@ -5,14 +5,14 @@ require('dotenv').config()
 module.exports = {
   solidity: "0.8.17",
   networks: {
-      mumbai: {
+    polygonMumbai: {
         url: 'https://rpc-mumbai.maticvigil.com',
         accounts: [process.env.PRIVATE_KEY]
       }
   },
   etherscan: {
     apiKey: {
-        mumbai: process.env.POLYGON_SCAN
+      polygonMumbai: process.env.POLYGON_SCAN
     }
   }
 };

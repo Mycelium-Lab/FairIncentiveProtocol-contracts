@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract FairProtocolERC20Manager is Ownable {
 
     address signer;
+    mapping(address => mapping(ERC20Universal => uint256)) public currentCount;
 
     constructor(address _signer) {
         signer = _signer;
@@ -20,9 +21,10 @@ contract FairProtocolERC20Manager is Ownable {
         uint256 amount
     ) external {
         require(check(
-            r,v,s,token,amount
+            r,v,s,token,amount, currentCount[msg.sender][token]
         ), "FairProtocolERC20Manager: Wrong signature");
         token.transferFrom(token.owner(), msg.sender, amount);
+        currentCount[msg.sender][token] += 1;
     }
 
     function check(
@@ -30,14 +32,16 @@ contract FairProtocolERC20Manager is Ownable {
         uint8 v,
         bytes32 s,
         ERC20Universal token,
-        uint256 amount
+        uint256 amount,
+        uint256 count
     ) private view returns (bool) {
         bytes32 hash = keccak256(
             abi.encodePacked(
                 amount,
                 msg.sender,
                 address(token),
-                address(this)
+                address(this),
+                count
             )
         );
         return

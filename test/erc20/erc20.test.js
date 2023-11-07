@@ -2,6 +2,8 @@ const { expect } = require("chai");
 const assert = require("assert");
 const { ethers } = require("hardhat")
 
+let usedSignature
+
 describe('ERC20Universal', () => {
 
     describe('Capped Pausable Burnable', async () => {
@@ -38,13 +40,16 @@ describe('ERC20Universal', () => {
 
         it('Should transfer tokens to user', async () => {
             const amount = ethers.utils.parseEther('1')
+            const currentCount = await fpmanager.currentCount(user.address, token.address)
             const signature = await sign(
                 amount,
                 user.address,
                 signer,
                 fpmanager.address,
-                token.address
+                token.address,
+                currentCount
             )
+            usedSignature = signature
             const balanceBefore = await token.balanceOf(user.address)
             await fpmanager.connect(user).mintSigner(
                 signature.r,
@@ -55,6 +60,19 @@ describe('ERC20Universal', () => {
             )
             const balanceAfter = await token.balanceOf(user.address)
             assert(balanceAfter > balanceBefore, 'Minter')
+        })
+
+        it('Should not allow to mint with the same sign', async () => {
+            const amount = ethers.utils.parseEther('1')
+            await expect(
+                fpmanager.connect(user).mintSigner(
+                    usedSignature.r,
+                    usedSignature.v,
+                    usedSignature.s,
+                    token.address,
+                    amount
+                )
+            ).to.be.rejectedWith('FairProtocolERC20Manager: Wrong signature')
         })
 
     })
@@ -93,12 +111,14 @@ describe('ERC20Universal', () => {
 
         it('Should transfer tokens to user', async () => {
             const amount = ethers.utils.parseEther('1')
+            const currentCount = await fpmanager.currentCount(user.address, token.address)
             const signature = await sign(
                 amount,
                 user.address,
                 signer,
                 fpmanager.address,
-                token.address
+                token.address,
+                currentCount
             )
             const balanceBefore = await token.balanceOf(user.address)
             await fpmanager.connect(user).mintSigner(
@@ -117,11 +137,11 @@ describe('ERC20Universal', () => {
 })
 
 async function sign(
-    amount, senderAddress, signer, managerAddress, tokenAddress
+    amount, senderAddress, signer, managerAddress, tokenAddress, count
 ) {
-    const message = [amount, senderAddress, tokenAddress, managerAddress]
+    const message = [amount, senderAddress, tokenAddress, managerAddress, count]
     const hashMessage = ethers.utils.solidityKeccak256([
-        "uint256","uint160","uint160","uint160"
+        "uint256","uint160","uint160","uint160", "uint256"
     ], message)
     const sign = await signer.signMessage(ethers.utils.arrayify(hashMessage));
     const r = sign.substr(0, 66)

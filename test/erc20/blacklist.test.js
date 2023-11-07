@@ -56,7 +56,6 @@ describe('ERC20Universal Blacklist', () => {
             for (let i = 0; i <= parseInt(lastBlacklistID); i++) {
                 const user = await token.blacklistUsers(i)
                 const blockTime = await token.blacklistTime(user)
-                console.log(user, blockTime.toString())
             }
         })
 

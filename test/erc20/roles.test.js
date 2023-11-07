@@ -55,7 +55,7 @@ describe('ERC20Universal Roles', () => {
         it('Should get allowed users', async () => {
             const lastAllowedUserID = parseInt(await token.lastAllowedUserID())
             for (let i = 0; i <= lastAllowedUserID; i++) {
-                console.log(await token.allowedUsersList(i))
+                // console.log(await token.allowedUsersList(i))
             }
         })
 

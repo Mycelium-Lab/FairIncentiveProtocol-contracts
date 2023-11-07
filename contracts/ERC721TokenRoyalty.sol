@@ -14,6 +14,7 @@ contract ERC721TokenRoyalty is ERC721Royalty, Ownable {
     mapping(uint256 => string) tokenURIs;
     mapping(address => mapping(string => bool)) public ownerHaveURI;
     uint96 immutable feeNumerator;
+    mapping(address => uint256) public currentCount;
 
     event SafeMintSigner(address sender, uint256 ID);
 
@@ -41,7 +42,7 @@ contract ERC721TokenRoyalty is ERC721Royalty, Ownable {
         bytes32 s,
         string memory uri
     ) external {
-        require(check(r, v, s, uri), 'ERC721Mintable: Wrong signature');
+        require(check(r, v, s, uri, currentCount[msg.sender]), 'ERC721Mintable: Wrong signature');
         require(!ownerHaveURI[msg.sender][uri], 'ERC721Mintable: Already have');
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
@@ -49,6 +50,7 @@ contract ERC721TokenRoyalty is ERC721Royalty, Ownable {
         tokenURIs[tokenId] = uri;
         ownerHaveURI[msg.sender][uri] = true;
         _setTokenRoyalty(tokenId, msg.sender, feeNumerator);
+        currentCount[msg.sender] += 1;
         emit SafeMintSigner(msg.sender, tokenId);
     }
 
@@ -60,13 +62,15 @@ contract ERC721TokenRoyalty is ERC721Royalty, Ownable {
         bytes32 r,
         uint8 v,
         bytes32 s,
-        string memory uri
+        string memory uri,
+        uint256 count
     ) private view returns (bool) {
         bytes32 hash = keccak256(
             abi.encodePacked(
                 uri,
                 msg.sender,
-                address(this)
+                address(this),
+                count
             )
         );
         return

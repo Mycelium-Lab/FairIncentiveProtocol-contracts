@@ -12,9 +12,8 @@ contract ERC721TokenRoyalty is ERC721Royalty, Ownable {
 
     address immutable signer;
     mapping(uint256 => string) tokenURIs;
-    mapping(address => mapping(string => bool)) public ownerHaveURI;
+    mapping(address => mapping(string => bool)) public userToRewardEvent;
     uint96 immutable feeNumerator;
-    mapping(address => uint256) public currentCount;
 
     event SafeMintSigner(address sender, uint256 ID);
 
@@ -40,17 +39,17 @@ contract ERC721TokenRoyalty is ERC721Royalty, Ownable {
         bytes32 r,
         uint8 v,
         bytes32 s,
-        string memory uri
+        string memory uri,
+        string memory uuid
     ) external {
-        require(check(r, v, s, uri, currentCount[msg.sender]), 'ERC721Mintable: Wrong signature');
-        require(!ownerHaveURI[msg.sender][uri], 'ERC721Mintable: Already have');
+        require(!userToRewardEvent[msg.sender][uuid], 'ERC721Mintable: Already taken');
+        require(check(r, v, s, uri, uuid), 'ERC721Mintable: Wrong signature');
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(msg.sender, tokenId);
         tokenURIs[tokenId] = uri;
-        ownerHaveURI[msg.sender][uri] = true;
         _setTokenRoyalty(tokenId, msg.sender, feeNumerator);
-        currentCount[msg.sender] += 1;
+        userToRewardEvent[msg.sender][uuid] = true;
         emit SafeMintSigner(msg.sender, tokenId);
     }
 
@@ -63,14 +62,14 @@ contract ERC721TokenRoyalty is ERC721Royalty, Ownable {
         uint8 v,
         bytes32 s,
         string memory uri,
-        uint256 count
+        string memory uuid
     ) private view returns (bool) {
         bytes32 hash = keccak256(
             abi.encodePacked(
                 uri,
                 msg.sender,
                 address(this),
-                count
+                uuid
             )
         );
         return

@@ -13,6 +13,11 @@ module.exports = {
       url: 'https://bsc-testnet.publicnode.com',
       accounts: [process.env.PRIVATE_KEY]
     },
+    sapphireTest: {
+      url: 'https://testnet.sapphire.oasis.dev',
+      accounts: [process.env.PRIVATE_KEY],
+      chainId: 23295
+    }
   },
   etherscan: {
     apiKey: {

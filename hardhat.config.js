@@ -17,6 +17,11 @@ module.exports = {
       url: 'https://testnet.sapphire.oasis.dev',
       accounts: [process.env.PRIVATE_KEY],
       chainId: 23295
+    },
+    arbiSepolia: {
+      url: 'https://sepolia-rollup.arbitrum.io/rpc',
+      accounts: [process.env.PRIVATE_KEY],
+      chainId: 421614
     }
   },
   etherscan: {
